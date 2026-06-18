@@ -1,0 +1,21 @@
+# Secrets & local config (keep the .example templates, ignore the real ones)
+# NOTE: config/brand.env is NOT secret (brand name/colors/links) and IS committed
+# so CI can build the rebranded image. Only files with real secrets are ignored.
+.env
+config/backend.env
+config/frontend.env
+
+# Backups & data
+backups/
+*.dump
+
+# Materialized frontend fork source (re-created by scripts/fork-frontend.sh)
+# Tracked: Dockerfile, REBRAND.md, public/assets/. Ignored: upstream source tree.
+frontend/_upstream/
+frontend/node_modules/
+frontend/.next/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.bak

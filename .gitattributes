@@ -1,0 +1,20 @@
+# Force LF for all text files on every platform. Critical: shell scripts run by
+# the Alpine /bin/sh in the Docker build break with CRLF (caused the first build
+# failure on this Windows host).
+* text=auto eol=lf
+
+# Explicit LF for scripts and configs the build executes.
+*.sh   text eol=lf
+*.js   text eol=lf
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+Makefile text eol=lf
+
+# Binary assets — never touch.
+*.png binary
+*.ico binary
+*.jpg binary
+*.webp binary

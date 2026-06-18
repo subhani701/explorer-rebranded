@@ -1,0 +1,14 @@
+# Production override: use the CI-built rebranded frontend image instead of
+# building locally (the dev machine can't build it). Layer on top of the base file:
+#
+#   FRONTEND_IMAGE=ghcr.io/<owner>/voltuswave-frontend:latest \
+#     docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Set FRONTEND_IMAGE in .env (or the shell) to the tag the CI workflow pushed.
+
+services:
+  frontend:
+    # Drop the local build; pull the prebuilt, fully-rebranded image.
+    build: !reset null
+    image: ${FRONTEND_IMAGE:?set FRONTEND_IMAGE to the CI-built tag}
+    pull_policy: always

@@ -1,0 +1,11 @@
+/* Hide Blockscout footer branding - targeted selectors only */
+
+/* Hide specific links by href */
+a[href="https://www.blockscout.com"],
+a[href*="github.com/blockscout"],
+a[href*="discord.gg"],
+a[href*="giveth.io"] {
+  display: none !important;
+}
+
+/* Note: JavaScript handles the rest to avoid hiding custom links */

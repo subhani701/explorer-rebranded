@@ -1,0 +1,80 @@
+name: Build rebranded frontend
+
+# Builds the fully de-branded Voltuswave frontend image on a CI runner (which has
+# enough RAM for the Next build, unlike the constrained dev machine) and pushes it
+# to GitHub Container Registry. Deploy by pulling this image (see docker-compose.prod.yml).
+
+on:
+  workflow_dispatch:
+    inputs:
+      frontend_tag:
+        description: Upstream frontend tag to fork
+        required: false
+        default: v2.8.0
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - 'config/brand.env'
+      - '.github/workflows/build-frontend.yml'
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/voltuswave-frontend
+  FRONTEND_TAG: ${{ github.event.inputs.frontend_tag || 'v2.8.0' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Materialize upstream fork
+        run: FRONTEND_TAG="${FRONTEND_TAG}" bash scripts/fork-frontend.sh
+
+      - name: Inject rebrand (overlays + assets + patches)
+        run: bash scripts/prepare-frontend.sh
+
+      - name: Lowercase image name
+        id: img
+        run: echo "name=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend/_upstream
+          file: ./frontend/_upstream/Dockerfile
+          push: true
+          build-args: |
+            GIT_TAG=${{ env.FRONTEND_TAG }}
+          tags: |
+            ${{ steps.img.outputs.name }}:latest
+            ${{ steps.img.outputs.name }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "### Rebranded frontend pushed :rocket:" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ steps.img.outputs.name }}:latest\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ steps.img.outputs.name }}:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy with: \`FRONTEND_IMAGE=${{ steps.img.outputs.name }}:latest docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d\`" >> "$GITHUB_STEP_SUMMARY"

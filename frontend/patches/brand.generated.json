@@ -1,0 +1,12 @@
+{
+  "name": "Voltuswave",
+  "shortName": "Voltuswave",
+  "networkName": "Voltuswave Network",
+  "description": "Explore blocks, transactions, tokens and smart contracts on the Voltuswave network.",
+  "metaTitle": "Voltuswave Explorer",
+  "copyright": "© 2026 Voltuswave. All rights reserved.",
+  "colorPrimary": "#E6262A",
+  "colorSecondary": "#0F0F0F",
+  "colorAccent": "#E6262A",
+  "homepage": "https://www.voltuswave.com"
+}
