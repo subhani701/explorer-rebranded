@@ -18,10 +18,6 @@ on:
       - 'config/brand.env'
       - '.github/workflows/build-frontend.yml'
 
-env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/voltuswave-frontend
-  FRONTEND_TAG: ${{ github.event.inputs.frontend_tag || 'v2.8.0' }}
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,15 +43,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compute image name and tag
+        id: vars
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${owner}/voltuswave-frontend" >> "$GITHUB_OUTPUT"
+          echo "tag=${{ github.event.inputs.frontend_tag || 'v2.8.0' }}" >> "$GITHUB_OUTPUT"
+
       - name: Materialize upstream fork
-        run: FRONTEND_TAG="${FRONTEND_TAG}" bash scripts/fork-frontend.sh
+        run: FRONTEND_TAG="${{ steps.vars.outputs.tag }}" bash scripts/fork-frontend.sh
 
       - name: Inject rebrand (overlays + assets + patches)
         run: bash scripts/prepare-frontend.sh
-
-      - name: Lowercase image name
-        id: img
-        run: echo "name=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -64,17 +63,17 @@ jobs:
           file: ./frontend/_upstream/Dockerfile
           push: true
           build-args: |
-            GIT_TAG=${{ env.FRONTEND_TAG }}
+            GIT_TAG=${{ steps.vars.outputs.tag }}
           tags: |
-            ${{ steps.img.outputs.name }}:latest
-            ${{ steps.img.outputs.name }}:${{ github.sha }}
+            ${{ steps.vars.outputs.image }}:latest
+            ${{ steps.vars.outputs.image }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Summary
         run: |
           echo "### Rebranded frontend pushed :rocket:" >> "$GITHUB_STEP_SUMMARY"
-          echo "- \`${{ steps.img.outputs.name }}:latest\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- \`${{ steps.img.outputs.name }}:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ steps.vars.outputs.image }}:latest\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ steps.vars.outputs.image }}:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Deploy with: \`FRONTEND_IMAGE=${{ steps.img.outputs.name }}:latest docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy: \`FRONTEND_IMAGE=${{ steps.vars.outputs.image }}:latest docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d\`" >> "$GITHUB_STEP_SUMMARY"
