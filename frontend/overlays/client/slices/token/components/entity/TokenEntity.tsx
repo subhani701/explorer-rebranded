@@ -26,8 +26,8 @@ import getChainTooltipText from 'ui/shared/externalChains/getChainTooltipText';
 import IconSvg from 'ui/shared/IconSvg';
 
 // Accept either `address_hash` (newer API) or `address` (older API) for the token address.
-const getTokenAddress = (token: { address_hash?: string }): string | undefined =>
-  token.address_hash ?? (token as { address?: string }).address;
+const getTokenAddress = (token: { address_hash?: string }): string =>
+  token.address_hash ?? (token as { address?: string }).address ?? '';
 
 type LinkProps = EntityBase.LinkBaseProps & Pick<EntityProps, 'token'>;
 
