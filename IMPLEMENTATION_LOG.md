@@ -121,9 +121,18 @@ the chain side.
 - Full backend stack healthy: db, redis, backend, stats, stats-db, verifier, visualizer,
   sig-provider. Indexing ongoing (300k+/1.19M, climbing fast).
 
+### 2026-06-19 — Full chain indexed + CI live
+- **Indexing complete: 100%** — block 0 (genesis) → tip 1,198,309, **1,198,317 blocks**.
+  Entire chain history in the explorer; backend healthy.
+- Pushed repo to GitHub (`subhani701/explorer-rebranded`, public).
+- First CI run hit `startup_failure` (top-level `env` github-context expressions) →
+  fixed by computing image name/tag in a step. Re-run **building** (image:
+  `ghcr.io/subhani701/voltuswave-frontend`).
+
 ## Remaining work
-- [ ] Run the CI workflow (push repo to GitHub) → produces the rebranded frontend image.
-- [ ] `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d frontend proxy`
-      → visual verification of the rebrand in-browser.
-- [ ] Let catch-up indexing finish (~1.19M blocks); chain has ~0 txs so it's fast.
+- [ ] CI build to finish → rebranded frontend image on GHCR (monitoring).
+- [ ] `FRONTEND_IMAGE=ghcr.io/subhani701/voltuswave-frontend:latest \
+      docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d frontend proxy`
+      → branded UI at http://localhost; visual rebrand verification.
+- [ ] Add GPL/Blockscout LICENSE/NOTICE to the public repo (compliance).
 - [ ] Pin image digests (`docker compose images`) for reproducible prod.
